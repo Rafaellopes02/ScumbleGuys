@@ -1,0 +1,17 @@
+# Ficheiros e pastas a ignorar
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Mm]emoryCaptures/
+sysinfo.txt
+*.csproj
+*.sln
+*.user
+*.pidb
+*.booproj
+*.svd
+.vscode/
+.DS_Store
