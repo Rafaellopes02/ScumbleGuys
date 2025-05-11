@@ -4,25 +4,30 @@ public class Player : MonoBehaviour
 {
     public float speed = 5f;
     public float jumpForce = 5f;
+    public float dashForce = 8f;
+
     public Rigidbody rb;
     public Transform cameraTransform;
+
+    private Animator animator;
 
     float horizontalInput;
     float verticalInput;
     bool isGrounded = true;
+    private bool hasDashed = false;
 
     void Start()
     {
+        animator = GetComponentInChildren<Animator>();
+
         if (cameraTransform == null)
         {
             cameraTransform = Camera.main.transform;
-            Debug.LogWarning("cameraTransform não estava atribuído, foi automaticamente preenchido.");
         }
 
         if (rb == null)
         {
             rb = GetComponent<Rigidbody>();
-            Debug.LogWarning("rb não estava atribuído, foi automaticamente preenchido.");
         }
     }
 
@@ -31,20 +36,42 @@ public class Player : MonoBehaviour
         horizontalInput = Input.GetAxis("Horizontal");
         verticalInput = Input.GetAxis("Vertical");
 
-        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
+        Vector3 input = new Vector3(horizontalInput, 0f, verticalInput);
+        bool isMoving = input.magnitude > 0.1f;
+
+        if (animator != null)
         {
-            rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
-            isGrounded = false;
+            animator.SetBool("isRunning", isMoving);
+        }
+
+        // Salto e mergulho (dash)
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            if (isGrounded)
+            {
+                rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+                isGrounded = false;
+                hasDashed = false;
+
+                animator?.SetBool("isJumping", true);
+            }
+            else if (!hasDashed)
+            {
+                Vector3 dashDirection = transform.forward;
+                rb.AddForce(dashDirection * dashForce, ForceMode.Impulse);
+                hasDashed = true;
+
+                animator?.SetBool("isDiving", true);
+            }
         }
     }
 
     void FixedUpdate()
     {
-        // Direção baseada na câmara
         Vector3 forward = cameraTransform.forward;
         Vector3 right = cameraTransform.right;
 
-        forward.y = 0; // não queremos que o movimento seja na vertical
+        forward.y = 0;
         right.y = 0;
 
         forward.Normalize();
@@ -54,6 +81,14 @@ public class Player : MonoBehaviour
         Vector3 movement = direction * speed * Time.fixedDeltaTime;
 
         rb.MovePosition(rb.position + movement);
+
+        // RotaÃ§Ã£o suave na direÃ§Ã£o do movimento
+        if (direction != Vector3.zero)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(direction);
+            Quaternion smoothedRotation = Quaternion.Slerp(transform.rotation, targetRotation, 10f * Time.fixedDeltaTime);
+            transform.rotation = smoothedRotation;
+        }
     }
 
     private void OnCollisionEnter(Collision collision)
@@ -61,6 +96,10 @@ public class Player : MonoBehaviour
         if (collision.contacts[0].normal.y > 0.5f)
         {
             isGrounded = true;
+            hasDashed = false;
+
+            animator?.SetBool("isJumping", false);
+            animator?.SetBool("isDiving", false);
         }
     }
 }
