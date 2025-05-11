@@ -2,12 +2,15 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+
 public class CountDownManager : MonoBehaviour
 {
     public Image countdownImage;
     public Sprite[] countdownSprites; // [3, 2, 1, GO]
     public GameObject player;
-    public TMP_Text timerText; 
+    public TMP_Text timerText;
+
+    public AudioSource countdownAudio; // 🎵 Áudio da contagem
 
     private float timer = 0f;
     private bool startCounting = false;
@@ -34,6 +37,12 @@ public class CountDownManager : MonoBehaviour
     {
         player.GetComponent<Player>().enabled = false;
 
+        // 🔊 Tocar som do countdown (se estiver atribuído)
+        if (countdownAudio != null)
+        {
+            countdownAudio.Play();
+        }
+
         for (int i = 0; i < countdownSprites.Length; i++)
         {
             countdownImage.sprite = countdownSprites[i];
@@ -44,8 +53,6 @@ public class CountDownManager : MonoBehaviour
         countdownImage.gameObject.SetActive(false);
         player.GetComponent<Player>().enabled = true;
 
-
-        // Iniciar o cronómetro
         startCounting = true;
         isCounting = true;
     }
@@ -54,10 +61,7 @@ public class CountDownManager : MonoBehaviour
     public void PararTemporizador()
     {
         isCounting = false;
-
-        // Guarda o tempo final como string
         PlayerPrefs.SetString("FinalTime", timerText.text);
         PlayerPrefs.Save();
     }
-
 }

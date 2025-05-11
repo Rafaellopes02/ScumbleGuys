@@ -4,10 +4,12 @@ using TMPro;
 public class FinalMenuController : MonoBehaviour
 {
     public TMP_Text timerText;
+    public AudioSource victoryAudio;
     public Animator characterAnimator; // Referência ao Animator do boneco
 
     void Start()
     {
+         victoryAudio.Play();
         // Atualiza o tempo final no texto
         string tempoFinal = PlayerPrefs.GetString("FinalTime", "00:00");
 

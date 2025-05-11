@@ -4,7 +4,6 @@ public class Player : MonoBehaviour
 {
     public float speed = 5f;
     public float jumpForce = 5f;
-    public float dashForce = 8f;
 
     public Rigidbody rb;
     public Transform cameraTransform;
@@ -14,21 +13,20 @@ public class Player : MonoBehaviour
     float horizontalInput;
     float verticalInput;
     bool isGrounded = true;
-    private bool hasDashed = false;
+
+    [Header("Áudio")]
+    public AudioSource audioPasso;
+    public AudioSource audioSalto;
 
     void Start()
     {
         animator = GetComponentInChildren<Animator>();
 
         if (cameraTransform == null)
-        {
             cameraTransform = Camera.main.transform;
-        }
 
         if (rb == null)
-        {
             rb = GetComponent<Rigidbody>();
-        }
     }
 
     void Update()
@@ -40,29 +38,31 @@ public class Player : MonoBehaviour
         bool isMoving = input.magnitude > 0.1f;
 
         if (animator != null)
-        {
             animator.SetBool("isRunning", isMoving);
+
+        // Som de passos
+        if (isMoving && isGrounded)
+        {
+            if (audioPasso != null && !audioPasso.isPlaying)
+                audioPasso.Play();
+        }
+        else
+        {
+            if (audioPasso != null && audioPasso.isPlaying)
+                audioPasso.Stop();
         }
 
-        // Salto e mergulho (dash)
-        if (Input.GetKeyDown(KeyCode.Space))
+        // Salto
+        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
         {
-            if (isGrounded)
-            {
-                rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
-                isGrounded = false;
-                hasDashed = false;
+            rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+            isGrounded = false;
 
-                animator?.SetBool("isJumping", true);
-            }
-            else if (!hasDashed)
-            {
-                Vector3 dashDirection = transform.forward;
-                rb.AddForce(dashDirection * dashForce, ForceMode.Impulse);
-                hasDashed = true;
+            if (animator != null)
+                animator.SetBool("isJumping", true);
 
-                animator?.SetBool("isDiving", true);
-            }
+            if (audioSalto != null)
+                audioSalto.Play();
         }
     }
 
@@ -82,24 +82,22 @@ public class Player : MonoBehaviour
 
         rb.MovePosition(rb.position + movement);
 
-        // Rotação suave na direção do movimento
+        // Rotação suave
         if (direction != Vector3.zero)
         {
             Quaternion targetRotation = Quaternion.LookRotation(direction);
-            Quaternion smoothedRotation = Quaternion.Slerp(transform.rotation, targetRotation, 10f * Time.fixedDeltaTime);
-            transform.rotation = smoothedRotation;
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 10f * Time.fixedDeltaTime);
         }
     }
 
-    private void OnCollisionEnter(Collision collision)
+    void OnCollisionEnter(Collision collision)
     {
         if (collision.contacts[0].normal.y > 0.5f)
         {
             isGrounded = true;
-            hasDashed = false;
 
-            animator?.SetBool("isJumping", false);
-            animator?.SetBool("isDiving", false);
+            if (animator != null)
+                animator.SetBool("isJumping", false);
         }
     }
 }
