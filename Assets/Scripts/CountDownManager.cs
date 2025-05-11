@@ -54,5 +54,10 @@ public class CountDownManager : MonoBehaviour
     public void PararTemporizador()
     {
         isCounting = false;
+
+        // Guarda o tempo final como string
+        PlayerPrefs.SetString("FinalTime", timerText.text);
+        PlayerPrefs.Save();
     }
+
 }
